@@ -24,13 +24,11 @@ jobs:
     - name: Build and Test
       run: |
         mvn -B clean verify --file pom.xml
-        # Alternative if tests are failing:
-        # mvn -B clean package -DskipTests --file pom.xml
         
-    # Optional artifact upload (if you produce build outputs)
+    # Fixed artifact upload step with current version
     - name: Upload Artifact
       if: success()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: build-artifacts
         path: target/*.jar
