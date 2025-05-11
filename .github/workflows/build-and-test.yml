@@ -1,69 +1,36 @@
-# GitHub Actions CI Workflow for Task Status Checker Project
+name: Continuous Integration Build and Unit Testing
 
-# Workflow name displayed in the GitHub Actions UI.
-name: CI Build and Unit Test
-
-# Events that trigger this workflow.
 on:
   push:
-    # Trigger on pushes to the 'main' branch.
-    # Adjust 'main' if your primary branch is named differently (e.g., 'master').
     branches: [ main ]
   pull_request:
-    # Trigger on pull requests targeting the 'main' branch.
-    # This is good practice to check code before merging.
     branches: [ main ]
 
-# Define jobs to be executed.
 jobs:
-  build: # This is the job ID
-    # Specify the runner environment for this job.
-    # 'ubuntu-latest' is a standard GitHub-hosted virtual machine with Ubuntu Linux.
+  build:
     runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job.
-    # Each item under 'steps' is a step in the job.
+    
     steps:
-    # Step 1: Simple step to confirm workflow execution starts
-    - name: Show Start Message
-      run: echo "Starting CI Build and Unit Test workflow..."
-
-    # Step 2: Get the source code from your GitHub repository.
     - name: Checkout Code
-      # Uses the 'actions/checkout' action to fetch the code.
-      uses: actions/checkout@v4 # Use version 4 of the checkout action.
+      uses: actions/checkout@v4
 
-    # Step 3: Configure the Java Development Kit environment.
     - name: Set up JDK 17
-      # Uses the 'actions/setup-java' action.
       uses: actions/setup-java@v4
       with:
-        # Specify the Java version to use. Make sure this matches your project's requirements.
-        java-version: '17' # Example: '8', '11', '17', '21'.
-        # Specify the JDK distribution. Temurin is a common open-source distribution.
+        java-version: '17'
         distribution: 'temurin'
-        # Optional: Cache Maven dependencies to potentially speed up subsequent builds.
-        # cache: maven # Uncomment this line to enable Maven dependency caching if desired.
+        cache: 'maven'
 
-    # Step 4: Configure the Maven environment.
-    - name: Set up Maven
-      # Uses the 'actions/setup-maven' action to install and set up Maven.
-      uses: actions/setup-maven@v5 # Use a recent version of the setup-maven action.
+    - name: Build and Test
+      run: |
+        mvn -B clean verify --file pom.xml
+        # Alternative if tests are failing:
+        # mvn -B clean package -DskipTests --file pom.xml
+        
+    # Optional artifact upload (if you produce build outputs)
+    - name: Upload Artifact
+      if: success()
+      uses: actions/upload-artifact@v3
       with:
-        # Optional: Specify the Maven version if you need a specific one.
-        # maven-version: '3.8.1'
-        # Optional: Cache Maven dependencies.
-        # cache: maven # Uncomment this line to enable Maven dependency caching if desired.
-
-    # Step 5: Build the project and run unit tests using Maven.
-    - name: Build with Maven
-      # Execute a shell command using the 'run' keyword.
-      # 'mvn -B package' command:
-      # - 'mvn': Invokes the Maven command.
-      # - '-B': Runs in Batch mode, which is less interactive and produces cleaner output for CI logs.
-      # - 'package': This Maven goal compiles the source code, runs the unit tests (via the Surefire plugin), and packages the compiled code into a distributable format (like a JAR or WAR) in the 'target' directory.
-      # '--file pom.xml': Explicitly specifies the Maven project file, though often implied.
-      run: mvn -B package --file pom.xml
-
-    # This workflow focuses on the core build and unit test steps required for the task.
-    # Running functional tests or uploading artifacts would require additional, uncommented steps.
+        name: build-artifacts
+        path: target/*.jar
