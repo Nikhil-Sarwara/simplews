@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
@@ -21,10 +21,19 @@ jobs:
         distribution: 'temurin'
         cache: 'maven'
 
+    # Add the ChromeDriver setup step here
+    - name: Set up ChromeDriver
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y chromium-chromedriver
+        # Set the CHROMEDRIVER_PATH environment variable for subsequent steps
+        echo "CHROMEDRIVER_PATH=/usr/bin/chromedriver" >> $GITHUB_ENV
+
     - name: Build and Test
+      # The test will now pick up CHROMEDRIVER_PATH from the environment
       run: |
         mvn -B clean verify --file pom.xml
-        
+
     # Fixed artifact upload step with current version
     - name: Upload Artifact
       if: success()
